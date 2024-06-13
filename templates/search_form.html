@@ -1,0 +1,8 @@
+<h1>
+    Search for a patent by entering an abstract idea
+</h1><form method="post">
+    {% csrf_token %}
+    <label for="text">Abstract idea:</label>
+    <input type="text" id="text" name="text">
+    <input type="submit" value="Search">
+</form>
