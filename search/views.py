@@ -3,13 +3,13 @@ import requests
 import google.generativeai as genai
 from django.http import HttpResponseRedirect, JsonResponse
 from .newsc import scrape_patent_data
-
+import os
 genai.configure(api_key="AIzaSyCjr-30vvDZoejP_MDDvhYbWCdLw_2XPME")
 
 
 def search_patents(request):
     if request.method == 'POST':
-        
+        os.environ["PATH"]+="/path/to/chromedriver.exe"
         text = request.POST.get("text")
         
         check_text= "give me only 10 keywords from the given text."
