@@ -7,7 +7,7 @@ import re
 
 def scrape_patent_data(query):
     options = webdriver.ChromeOptions()
-    options.add_argument('--headless')  # Enable headless mode
+    options.add_argument('--headless')  # Enable headless mode no gui chrome will work in background 
 
     # Set the path to your ChromeDriver executable (if not in PATH)
     # os.environ["PATH"] += ":/path/to/chromedriver"
