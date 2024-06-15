@@ -11,16 +11,16 @@ def search_patents(request):
     if request.method == 'POST':
         text = request.POST.get("text")
         
-        check_text= "give me only 10 keywords from the given text."
+        check_text= "give me only minimum 5-7 word to so that i can search on google patent to match my idea with any which is relevant remember your response should be those 5-7 word nothing else"
 
         model = genai.GenerativeModel("gemini-pro")
         chat = model.start_chat()
         res = chat.send_message(text+check_text)
-        scrape_patent_data(res.text)
+        print(res.text)
+        data=scrape_patent_data(res.text)
         prompt="commpare both idea and tell if any thing is common in them i am giving you abstrat idea of both the project with intentiono of identifying if my idea is different and can be put to publish and patent tell your opinion if they are similar and what way before this prompt the idea which is ours is given and after this text all the idea which are on google patent is there  "
-        with open("data.txt","r+",encoding="utf-8") as file:
-            data = file.read()
         response = chat.send_message(text+prompt+data)
+        print(response.text)
         return render(request, 'search_results.html', {'results': response.text})
     elif request.method == 'GET':
         return render(request, 'search_form.html')
