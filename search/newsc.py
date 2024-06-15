@@ -1,4 +1,4 @@
-#!/bin/python3
+
 
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -7,7 +7,7 @@ import re
 
 def scrape_patent_data(query):
     options = webdriver.ChromeOptions()
-    #options.add_argument('--headless')  # Enable headless mode no gui chrome will work in background 
+    options.add_argument('--headless')  # Enable headless mode no gui chrome will work in background 
 
     # Set the path to your ChromeDriver executable (if not in PATH)
     # os.environ["PATH"] += ":/path/to/chromedriver"
@@ -15,7 +15,7 @@ def scrape_patent_data(query):
     driver = webdriver.Chrome(options=options)
 
     driver.get(f"https://patents.google.com/?q=({query})&oq={query}")
-    sleep(3.5)  # Adjust wait time as needed
+    sleep(3)  # Adjust wait time as needed
 
     elements = driver.find_elements(By.XPATH, '//*[@id="resultsContainer"]//span[contains(@data-proto, "OPEN_PATENT_PDF")]')
     arr = []
@@ -32,7 +32,7 @@ def scrape_patent_data(query):
 
     for i in range(len(arr)):
         driver.get(f"https://patents.google.com/patent/{arr[i]}/en")
-        sleep(2.5)  # Adjust wait time as needed
+        sleep(2)  # Adjust wait time as needed
         text = driver.find_elements(By.XPATH, '//*[@id="text"]/abstract/div')
         text_data+=f"patent no -{arr[i]} " 
         for t in text:
