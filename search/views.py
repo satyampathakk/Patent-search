@@ -18,6 +18,7 @@ def search_patents(request):
         res = chat.send_message(text+check_text)
         print(res.text)
         data=scrape_patent_data(res.text)
+        print(data)
         prompt="commpare both idea and tell if any thing is common in them i am giving you abstrat idea of both the project with intentiono of identifying if my idea is different and can be put to publish and patent tell your opinion if they are similar and what way before this prompt the idea which is ours is given and after this text all the idea which are on google patent is there  "
         response = chat.send_message(text+prompt+data)
         print(response.text)
