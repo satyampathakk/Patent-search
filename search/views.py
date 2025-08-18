@@ -13,7 +13,7 @@ def search_patents(request):
         
         check_text= "give me only minimum 5-7 word to so that i can search on google patent to match my idea with any which is relevant remember your response should be those 5-7 word nothing else"
 
-        model = genai.GenerativeModel("gemini-pro")
+        model = genai.GenerativeModel("gemini-flash-2.5")
         chat = model.start_chat()
         res = chat.send_message(text+check_text)
         print(res.text)
