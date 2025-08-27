@@ -1,17 +1,111 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Patent Search Results</title>
+    <style>
+        /* General Styles */
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #121212;
+            color: #e0e0e0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* Container */
+        .container {
+            background-color: #1e1e1e;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+            width: 90%;
+            max-width: 600px;
+            text-align: center;
+        }
+
+        /* Title */
+        .title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #00bcd4;
+        }
+
+        /* Results */
+        .results, .error {
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            word-wrap: break-word;
+        }
+
+        /* Results styling */
+        .results {
+            background-color: #263238;
+            border: 1px solid #37474f;
+            color: #b2ebf2;
+        }
+
+        /* Error styling */
+        .error {
+            background-color: #3e1f1f;
+            border: 1px solid #5c1a1a;
+            color: #ff8a80;
+        }
+
+        /* Footer */
+        .footer {
+            font-size: 14px;
+            color: #999;
+            margin-top: 20px;
+        }
+
+        /* Button Styles */
+        .button {
+            display: inline-block;
+            padding: 10px 20px;
+            margin-top: 20px;
+            border: none;
+            border-radius: 5px;
+            background-color: #00bcd4;
+            color: white;
+            text-decoration: none;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+
+        .button:hover {
+            background-color: #0097a7;
+        }
+    </style>
 </head>
 <body>
-    {% if results %}
-    <p>{{ results }}</p>
-{% elif error %}
-    <p>{{ error }}</p>
-{% endif %}
-
-
-
-
+    <div class="container">
+        <h1 class="title">Patent Search Results</h1>
+        
+        {% if results %}
+            <div class="results">
+                <p>{{ results }}</p>
+            </div>
+        {% elif error %}
+            <div class="error">
+                <p>{{ error }}</p>
+            </div>
+        {% endif %}
+        
+        <a href="/" class="button">Back to Search</a>
+        
+        <div class="footer">
+            &copy; 2025 Patent Search. All rights reserved.
+        </div>
+    </div>
 </body>
 </html>

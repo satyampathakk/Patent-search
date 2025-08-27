@@ -4,7 +4,7 @@ import google.generativeai as genai
 from django.http import HttpResponseRedirect, JsonResponse
 from .newsc import scrape_patent_data
 import os
-genai.configure(api_key="AIzaSyCjr-30vvDZoejP_MDDvhYbWCdLw_2XPME")
+genai.configure(api_key="AIzaSyDt6D-1Ss-cJhLGfNhfOTwtjvks1ynQ8ac")
 
 
 def search_patents(request):
@@ -13,7 +13,7 @@ def search_patents(request):
         
         check_text= "give me only minimum 5-7 word to so that i can search on google patent to match my idea with any which is relevant remember your response should be those 5-7 word nothing else"
 
-        model = genai.GenerativeModel("gemini-flash-2.5")
+        model = genai.GenerativeModel("models/gemini-2.5-flash")
         chat = model.start_chat()
         res = chat.send_message(text+check_text)
         print(res.text)
