@@ -4,7 +4,7 @@ import google.generativeai as genai
 from django.http import HttpResponseRedirect, JsonResponse
 from .newsc import scrape_patent_data
 import os
-genai.configure(api_key="AIzaSyDt6D-1Ss-cJhLGfNhfOTwtjvks1ynQ8ac")
+genai.configure(api_key="")
 
 
 def search_patents(request):
