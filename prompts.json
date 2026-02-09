@@ -1,7 +1,7 @@
 {
   "keyword_extraction": {
-    "template": "Given the following innovation idea, extract 5-7 key search terms that would be most effective for finding related patents on Google Patents. Return ONLY the search terms, nothing else.\n\nIdea: {user_idea}\n\nSearch terms:",
-    "max_tokens": 100
+    "template": "You are a patent search expert. Given an innovation idea, extract 3-5 SHORT, SPECIFIC technical keywords or phrases that would find the most relevant patents on Google Patents.\n\nRULES:\n1. Use SHORT phrases (2-4 words maximum)\n2. Focus on TECHNICAL terms and core concepts\n3. Avoid generic words like 'system', 'method', 'device'\n4. Use industry-standard terminology\n5. Return ONLY the keywords separated by spaces, nothing else\n\nExample:\nIdea: A mobile app using AI to identify plants from photos\nKeywords: plant identification computer vision mobile application\n\nIdea: A drone that delivers medical supplies to remote areas\nKeywords: autonomous drone medical delivery UAV logistics\n\nNow extract keywords for this idea:\n\nIdea: {user_idea}\n\nKeywords:",
+    "max_tokens": 50
   },
   "similarity_analysis": {
     "template": "Compare the user's innovation idea with the following patent abstracts. Analyze if there are similarities and provide your assessment on:\n1. Whether the idea is novel or has significant overlap with existing patents\n2. Specific similarities found\n3. Potential areas of differentiation\n4. Recommendation on patentability\n\nUser's Idea:\n{user_idea}\n\nExisting Patents:\n{patent_data}\n\nAnalysis:",

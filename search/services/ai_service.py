@@ -20,39 +20,41 @@ class AIAdapter(ABC):
         """Analyze similarity between idea and patents."""
         pass
 
-
 class GeminiAdapter(AIAdapter):
     """Adapter for Google Gemini API."""
-    
+
     def __init__(self, api_key: str, prompt_service: PromptService):
-        """Initialize Gemini API client."""
         self.prompt_service = prompt_service
         genai.configure(api_key=api_key)
-        self.model = genai.GenerativeModel("models/gemini-2.0-flash-exp")
-    
+
+        # ✅ VALID model
+        self.model = genai.GenerativeModel(
+            model_name="gemini-flash-lite-latest"
+        )
+
     def extract_keywords(self, user_idea: str) -> str:
-        """Use Gemini API for keyword extraction with retry logic."""
         prompt = self.prompt_service.get_keyword_extraction_prompt(user_idea)
         return self._call_with_retry(prompt)
-    
+
     def analyze_similarity(self, user_idea: str, patent_data: str) -> str:
-        """Use Gemini API for similarity analysis with retry logic."""
-        prompt = self.prompt_service.get_similarity_analysis_prompt(user_idea, patent_data)
+        prompt = self.prompt_service.get_similarity_analysis_prompt(
+            user_idea, patent_data
+        )
         return self._call_with_retry(prompt)
-    
+
     def _call_with_retry(self, prompt: str, max_retries: int = 3) -> str:
-        """Call Gemini API with retry logic."""
         for attempt in range(max_retries):
             try:
-                chat = self.model.start_chat()
-                response = chat.send_message(prompt)
-                return response.text
+                # ✅ CORRECT API USAGE
+                response = self.model.generate_content(prompt)
+                return response.text.strip()
+
             except Exception as e:
                 if attempt == max_retries - 1:
-                    raise Exception(f"Gemini API failed after {max_retries} attempts: {str(e)}")
-                time.sleep(2 ** attempt)  # Exponential backoff
-        return ""
-
+                    raise RuntimeError(
+                        f"Gemini API failed after {max_retries} attempts: {e}"
+                    )
+                time.sleep(2 ** attempt)
 
 class LocalModelAdapter(AIAdapter):
     """Adapter for local transformer models."""
@@ -131,29 +133,58 @@ class LocalModelAdapter(AIAdapter):
     
     def _extract_keywords_with_embeddings(self, user_idea: str) -> str:
         """Fallback: Extract keywords using sentence embeddings and similarity."""
-        # Split into sentences/phrases
-        words = user_idea.split()
-        if len(words) <= 7:
+        import re
+        
+        # Clean and tokenize
+        words = user_idea.lower().split()
+        if len(words) <= 5:
             return user_idea
         
-        # Create candidate phrases (1-3 word combinations)
-        candidates = []
-        for i in range(len(words)):
-            # Single words
-            if len(words[i]) > 3:  # Skip very short words
-                candidates.append(words[i])
-            # Two-word phrases
-            if i < len(words) - 1:
-                candidates.append(f"{words[i]} {words[i+1]}")
-            # Three-word phrases
-            if i < len(words) - 2:
-                candidates.append(f"{words[i]} {words[i+1]} {words[i+2]}")
+        # Remove common stop words that don't help patent search
+        stop_words = {
+            'a', 'an', 'the', 'is', 'are', 'was', 'were', 'be', 'been', 'being',
+            'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'could',
+            'should', 'may', 'might', 'must', 'can', 'of', 'at', 'by', 'for',
+            'with', 'about', 'against', 'between', 'into', 'through', 'during',
+            'before', 'after', 'above', 'below', 'to', 'from', 'up', 'down',
+            'in', 'out', 'on', 'off', 'over', 'under', 'again', 'further',
+            'then', 'once', 'here', 'there', 'when', 'where', 'why', 'how',
+            'all', 'both', 'each', 'few', 'more', 'most', 'other', 'some',
+            'such', 'no', 'nor', 'not', 'only', 'own', 'same', 'so', 'than',
+            'too', 'very', 'that', 'this', 'these', 'those', 'what', 'which',
+            'who', 'system', 'method', 'device', 'apparatus', 'using', 'used'
+        }
         
-        # Remove duplicates
-        candidates = list(set(candidates))[:50]  # Limit to 50 candidates
+        # Create candidate phrases focusing on technical terms
+        candidates = []
+        
+        # Single important words (longer than 4 chars, not stop words)
+        for word in words:
+            if len(word) > 4 and word not in stop_words:
+                candidates.append(word)
+        
+        # Two-word technical phrases
+        for i in range(len(words) - 1):
+            if words[i] not in stop_words or words[i+1] not in stop_words:
+                phrase = f"{words[i]} {words[i+1]}"
+                if len(phrase) > 6:  # Avoid very short phrases
+                    candidates.append(phrase)
+        
+        # Three-word technical phrases (more selective)
+        for i in range(len(words) - 2):
+            # At least one word should not be a stop word
+            if any(w not in stop_words for w in [words[i], words[i+1], words[i+2]]):
+                phrase = f"{words[i]} {words[i+1]} {words[i+2]}"
+                if len(phrase) > 10:  # Longer phrases should be meaningful
+                    candidates.append(phrase)
+        
+        # Remove duplicates and limit
+        candidates = list(set(candidates))[:40]
         
         if not candidates:
-            return ' '.join(words[:7])
+            # Fallback: return first few non-stop words
+            filtered = [w for w in words if w not in stop_words]
+            return ' '.join(filtered[:5])
         
         # Encode the full idea and candidates
         idea_embedding = self.embedding_model.encode([user_idea])[0]
@@ -162,11 +193,12 @@ class LocalModelAdapter(AIAdapter):
         # Calculate similarity scores
         similarities = self.cosine_similarity([idea_embedding], candidate_embeddings)[0]
         
-        # Get top 5-7 keywords
-        top_indices = self.np.argsort(similarities)[-7:][::-1]
+        # Get top 3-5 keywords (fewer, more focused)
+        top_indices = self.np.argsort(similarities)[-5:][::-1]
         top_keywords = [candidates[i] for i in top_indices]
         
-        return ' '.join(top_keywords[:7])
+        # Return 3-5 most relevant keywords
+        return ' '.join(top_keywords[:5])
     
     def analyze_similarity(self, user_idea: str, patent_data: str) -> str:
         """Use embeddings and cosine similarity for analysis."""

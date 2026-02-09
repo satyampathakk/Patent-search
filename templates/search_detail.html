@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Search Details - Patent Search</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -95,7 +96,6 @@
         .detail-content {
             color: #555;
             line-height: 1.8;
-            white-space: pre-wrap;
             font-size: 14px;
         }
         .keywords-box {
@@ -111,6 +111,99 @@
             color: #667eea;
             font-weight: 500;
         }
+        
+        /* Markdown styling */
+        .markdown-content h1,
+        .markdown-content h2,
+        .markdown-content h3,
+        .markdown-content h4 {
+            color: #333;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        .markdown-content h1 {
+            font-size: 24px;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 8px;
+        }
+        .markdown-content h2 {
+            font-size: 20px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 6px;
+        }
+        .markdown-content h3 {
+            font-size: 18px;
+            color: #667eea;
+        }
+        .markdown-content h4 {
+            font-size: 16px;
+        }
+        .markdown-content p {
+            margin-bottom: 12px;
+            line-height: 1.8;
+        }
+        .markdown-content ul,
+        .markdown-content ol {
+            margin-left: 20px;
+            margin-bottom: 12px;
+        }
+        .markdown-content li {
+            margin-bottom: 6px;
+            line-height: 1.6;
+        }
+        .markdown-content strong {
+            color: #333;
+            font-weight: 600;
+        }
+        .markdown-content em {
+            font-style: italic;
+        }
+        .markdown-content code {
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+        }
+        .markdown-content pre {
+            background: #f4f4f4;
+            padding: 12px;
+            border-radius: 5px;
+            overflow-x: auto;
+            margin-bottom: 12px;
+        }
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+        .markdown-content blockquote {
+            border-left: 4px solid #667eea;
+            padding-left: 15px;
+            margin: 12px 0;
+            color: #666;
+            font-style: italic;
+        }
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-bottom: 12px;
+        }
+        .markdown-content th,
+        .markdown-content td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        .markdown-content th {
+            background: #f8f9fa;
+            font-weight: 600;
+        }
+        .markdown-content hr {
+            border: none;
+            border-top: 1px solid #ddd;
+            margin: 20px 0;
+        }
+        
         @media (max-width: 768px) {
             .navbar {
                 flex-direction: column;
@@ -167,7 +260,9 @@
 
             <div class="detail-section">
                 <h3>Patent Analysis</h3>
-                <div class="detail-content">{{ search.analysis_result }}</div>
+                <div class="detail-content markdown-content" id="analysis-content">
+                    <!-- Markdown will be rendered here -->
+                </div>
             </div>
 
             {% if search.patent_data %}
@@ -178,5 +273,24 @@
             {% endif %}
         </div>
     </div>
+
+    <script>
+        // Render markdown content
+        document.addEventListener('DOMContentLoaded', function() {
+            const analysisContent = document.getElementById('analysis-content');
+            const markdownText = `{{ search.analysis_result|escapejs }}`;
+            
+            // Configure marked options
+            marked.setOptions({
+                breaks: true,
+                gfm: true,
+                headerIds: false,
+                mangle: false
+            });
+            
+            // Render markdown to HTML
+            analysisContent.innerHTML = marked.parse(markdownText);
+        });
+    </script>
 </body>
 </html>
