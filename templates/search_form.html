@@ -2,154 +2,222 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Patent Search Engine</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patent Search</title>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
         body {
-            font-family: 'Roboto', sans-serif;
-            background: #01010a;
-            color: #e0e6eb;
-            line-height: 1.6;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
         }
-        header {
-            background: #01010a;
-            color: #e0e6eb;
-            padding: 60px 20px 40px 20px;
-            text-align: center;
+        .navbar {
+            background: #667eea;
+            color: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
-        header h1 { font-size: 3em; margin-bottom: 10px; color: #00bfff; }
-        header p { font-size: 1.2em; margin-bottom: 30px; color: #cfd8e3; }
-        .hero-image {
-            width: 100%;
-            max-width: 700px;
-            margin: 0 auto 30px auto;
-            display: block;
-            border-radius: 15px;
-            box-shadow: 0 5px 25px rgba(0,0,0,0.6);
+        .navbar h1 {
+            font-size: 24px;
+        }
+        .navbar-links {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+        .navbar-links a {
+            color: white;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            transition: background 0.3s;
+        }
+        .navbar-links a:hover {
+            background: rgba(255,255,255,0.2);
         }
         .container {
-            max-width: 600px;
+            max-width: 900px;
             margin: 30px auto;
-            padding: 30px;
-            background: #12121c;
-            border-radius: 15px;
-            box-shadow: 0 8px 30px rgba(0,0,0,0.7);
-            text-align: center;
-        }
-        .search-form {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-        .search-form label {
-            font-weight: 500;
-            font-size: 1.1em;
-            text-align: left;
-            color: #e0e6eb;
-        }
-        .search-form input[type="text"] {
-            padding: 12px 15px;
-            border: 1px solid #333;
-            border-radius: 8px;
-            font-size: 1em;
-            width: 100%;
-            background: #01010a;
-            color: #e0e6eb;
-            transition: all 0.3s ease;
-        }
-        .search-form input[type="text"]::placeholder { color: #777; }
-        .search-form input[type="text"]:focus {
-            border-color: #00bfff;
-            box-shadow: 0 0 8px rgba(0,191,255,0.5);
-            outline: none;
-        }
-        .search-form input[type="submit"] {
-            background-color: #00bfff;
-            color: #01010a;
-            padding: 12px 20px;
-            border: none;
-            border-radius: 8px;
-            font-size: 1.1em;
-            cursor: pointer;
-            transition: background-color 0.3s ease, transform 0.2s ease;
-        }
-        .search-form input[type="submit"]:hover {
-            background-color: #009acd;
-            transform: translateY(-2px);
-        }
-        .features {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-around;
-            max-width: 1000px;
-            margin: 60px auto;
-            gap: 40px;
             padding: 0 20px;
         }
-        .feature {
-            background: #12121c;
-            border-radius: 15px;
+        .page-header {
+            background: white;
             padding: 30px;
-            flex: 1 1 250px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
             text-align: center;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.7);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
-        .feature:hover { 
-            transform: translateY(-5px);
-            box-shadow: 0 12px 35px rgba(0,191,255,0.5);
+        .page-header h2 {
+            color: #333;
+            margin-bottom: 10px;
         }
-        .feature img { width: 80px; margin-bottom: 20px; filter: brightness(0) invert(1); }
-        .feature h3 { margin-bottom: 10px; color: #00bfff; }
-        .feature p { color: #cfd8e3; font-size: 0.95em; }
-        footer {
-            background: #01010a;
-            color: #e0e6eb;
+        .page-header p {
+            color: #666;
+            font-size: 14px;
+        }
+        .search-card {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .messages {
+            margin-bottom: 20px;
+        }
+        .message {
+            padding: 12px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+        .message.error {
+            background: #fee;
+            color: #c33;
+            border: 1px solid #fcc;
+        }
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+        }
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 150px;
+        }
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102,126,234,0.1);
+        }
+        .btn {
+            width: 100%;
+            padding: 12px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .btn:hover {
+            background: #5568d3;
+        }
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .loading {
+            display: none;
             text-align: center;
-            padding: 20px;
-            border-top: 1px solid #333;
+            margin-top: 20px;
+            color: #667eea;
+            font-size: 14px;
         }
-        footer a { color: #00bfff; text-decoration: underline; }
-        @media(max-width: 768px) {
-            .features { flex-direction: column; align-items: center; }
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+            vertical-align: middle;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        @media (max-width: 768px) {
+            .navbar {
+                flex-direction: column;
+                gap: 10px;
+            }
+            .container {
+                padding: 0 15px;
+            }
+            .search-card {
+                padding: 20px;
+            }
         }
     </style>
 </head>
 <body>
-
-    <header>
-        <h1>Patent Search Engine</h1>
-        <p>Discover innovative patents by entering your abstract idea below.</p>
-        <img src="https://legalvidhiya.com/wp-content/uploads/2023/08/image-303.png" alt="Patent concept" class="hero-image">
-    </header>
+    {% if user.is_authenticated %}
+    <nav class="navbar">
+        <h1>Patent Search System</h1>
+        <div class="navbar-links">
+            <span>{{ user.username }}</span>
+            <a href="{% url 'dashboard' %}">Dashboard</a>
+            <a href="{% url 'logout' %}">Logout</a>
+        </div>
+    </nav>
+    {% endif %}
 
     <div class="container">
-        <form method="post" class="search-form">
-            {% csrf_token %}
-            <label for="text">Abstract idea:</label>
-            <input type="text" id="text" name="text" placeholder="Enter your innovative idea...">
-            <input type="submit" value="Search">
-        </form>
+        <div class="page-header">
+            <h2>Search for Similar Patents</h2>
+            <p>Enter a detailed description of your innovation idea to find similar existing patents</p>
+        </div>
+
+        {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+            <div class="message {{ message.tags }}">{{ message }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="search-card">
+            <form method="post" id="searchForm">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="text">Describe your innovation idea:</label>
+                    <textarea 
+                        id="text" 
+                        name="text" 
+                        placeholder="Enter a detailed description of your innovation idea. Include technical details, the problem it solves, and what makes it unique..."
+                        required
+                    ></textarea>
+                </div>
+                <button type="submit" class="btn" id="submitBtn">Search Patents</button>
+            </form>
+
+            <div class="loading" id="loading">
+                <div class="loading-spinner"></div>
+                <span>Analyzing your idea and searching for similar patents...</span>
+            </div>
+        </div>
     </div>
 
-    <section class="features">
-        <div class="feature">
-            <img src="https://img.icons8.com/ios-filled/100/ffffff/search.png" alt="Fast Search">
-            <h3>Fast Search</h3>
-            <p>Quickly find relevant patents based on your abstract ideas.</p>
-        </div>
-        <div class="feature">
-            <img src="https://img.icons8.com/ios-filled/100/ffffff/idea.png" alt="Innovative Ideas">
-            <h3>Innovative Ideas</h3>
-            <p>Explore similar patents to inspire and refine your concepts.</p>
-        </div>
-
-    </section>
-
-    <footer>
-        &copy; 2025 Patent Search Engine. All rights reserved. | <a href="#">Privacy Policy</a>
-    </footer>
-
+    <script>
+        document.getElementById('searchForm').addEventListener('submit', function() {
+            document.getElementById('submitBtn').disabled = true;
+            document.getElementById('submitBtn').textContent = 'Searching...';
+            document.getElementById('loading').style.display = 'block';
+        });
+    </script>
 </body>
 </html>

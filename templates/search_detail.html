@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Search Results - Patent Search</title>
+    <title>Search Details - Patent Search</title>
     <style>
         * {
             margin: 0;
@@ -56,27 +56,43 @@
         .back-link:hover {
             text-decoration: underline;
         }
-        .result-card {
+        .detail-card {
             background: white;
             padding: 30px;
             border-radius: 10px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
             margin-bottom: 20px;
         }
-        .section {
+        .meta-info {
+            display: flex;
+            gap: 30px;
+            margin-bottom: 30px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            border-left: 4px solid #667eea;
+        }
+        .meta-item {
+            color: #666;
+            font-size: 14px;
+        }
+        .meta-item strong {
+            color: #333;
+        }
+        .detail-section {
             margin-bottom: 30px;
         }
-        .section:last-child {
+        .detail-section:last-child {
             margin-bottom: 0;
         }
-        .section h3 {
+        .detail-section h3 {
             color: #333;
             margin-bottom: 15px;
             padding-bottom: 10px;
             border-bottom: 2px solid #667eea;
             font-size: 18px;
         }
-        .section-content {
+        .detail-content {
             color: #555;
             line-height: 1.8;
             white-space: pre-wrap;
@@ -95,45 +111,6 @@
             color: #667eea;
             font-weight: 500;
         }
-        .actions {
-            display: flex;
-            gap: 15px;
-            margin-top: 30px;
-            padding-top: 20px;
-            border-top: 1px solid #eee;
-        }
-        .btn {
-            padding: 10px 20px;
-            border-radius: 5px;
-            text-decoration: none;
-            font-size: 14px;
-            transition: all 0.3s;
-            border: none;
-            cursor: pointer;
-        }
-        .btn-primary {
-            background: #667eea;
-            color: white;
-        }
-        .btn-primary:hover {
-            background: #5568d3;
-        }
-        .btn-secondary {
-            background: #6c757d;
-            color: white;
-        }
-        .btn-secondary:hover {
-            background: #5a6268;
-        }
-        .success-badge {
-            display: inline-block;
-            background: #d4edda;
-            color: #155724;
-            padding: 8px 16px;
-            border-radius: 5px;
-            font-size: 14px;
-            margin-bottom: 20px;
-        }
         @media (max-width: 768px) {
             .navbar {
                 flex-direction: column;
@@ -142,15 +119,12 @@
             .container {
                 padding: 0 15px;
             }
-            .result-card {
+            .detail-card {
                 padding: 20px;
             }
-            .actions {
+            .meta-info {
                 flex-direction: column;
-            }
-            .btn {
-                width: 100%;
-                text-align: center;
+                gap: 10px;
             }
         }
     </style>
@@ -169,36 +143,39 @@
     <div class="container">
         <a href="{% url 'dashboard' %}" class="back-link">← Back to Dashboard</a>
 
-        <div class="success-badge">
-            ✓ Search completed successfully
-        </div>
-
-        <div class="result-card">
-            {% if user_idea %}
-            <div class="section">
-                <h3>Your Innovation Idea</h3>
-                <div class="section-content">{{ user_idea }}</div>
-            </div>
-            {% endif %}
-
-            {% if keywords %}
-            <div class="section">
-                <h3>Extracted Keywords</h3>
-                <div class="keywords-box">
-                    <strong>Search Terms:</strong> <span>{{ keywords }}</span>
+        <div class="detail-card">
+            <div class="meta-info">
+                <div class="meta-item">
+                    <strong>Date:</strong> {{ search.created_at|date:"F d, Y - g:i A" }}
+                </div>
+                <div class="meta-item">
+                    <strong>User:</strong> {{ search.user.username }}
                 </div>
             </div>
+
+            <div class="detail-section">
+                <h3>Your Innovation Idea</h3>
+                <div class="detail-content">{{ search.search_text }}</div>
+            </div>
+
+            <div class="detail-section">
+                <h3>Extracted Keywords</h3>
+                <div class="keywords-box">
+                    <strong>Search Terms:</strong> <span>{{ search.keywords_extracted }}</span>
+                </div>
+            </div>
+
+            <div class="detail-section">
+                <h3>Patent Analysis</h3>
+                <div class="detail-content">{{ search.analysis_result }}</div>
+            </div>
+
+            {% if search.patent_data %}
+            <div class="detail-section">
+                <h3>Patent Data Retrieved</h3>
+                <div class="detail-content">{{ search.patent_data|truncatewords:200 }}</div>
+            </div>
             {% endif %}
-
-            <div class="section">
-                <h3>Patent Analysis Results</h3>
-                <div class="section-content">{{ results }}</div>
-            </div>
-
-            <div class="actions">
-                <a href="{% url 'dashboard' %}" class="btn btn-primary">View Dashboard</a>
-                <a href="{% url 'search_patents' %}" class="btn btn-secondary">New Search</a>
-            </div>
         </div>
     </div>
 </body>

@@ -1,0 +1,10 @@
+{
+  "keyword_extraction": {
+    "template": "Given the following innovation idea, extract 5-7 key search terms that would be most effective for finding related patents on Google Patents. Return ONLY the search terms, nothing else.\n\nIdea: {user_idea}\n\nSearch terms:",
+    "max_tokens": 100
+  },
+  "similarity_analysis": {
+    "template": "Compare the user's innovation idea with the following patent abstracts. Analyze if there are similarities and provide your assessment on:\n1. Whether the idea is novel or has significant overlap with existing patents\n2. Specific similarities found\n3. Potential areas of differentiation\n4. Recommendation on patentability\n\nUser's Idea:\n{user_idea}\n\nExisting Patents:\n{patent_data}\n\nAnalysis:",
+    "max_tokens": 1500
+  }
+}

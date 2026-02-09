@@ -1,38 +1,61 @@
-from django.shortcuts import render, reverse
-import requests
-import google.generativeai as genai
-from django.http import HttpResponseRedirect, JsonResponse
+from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
 from .newsc import scrape_patent_data
-import os
-genai.configure(api_key="")
+from .services import AIService
+from .models import SearchHistory
 
 
+@login_required
 def search_patents(request):
+    """Handle patent search requests using AI service."""
     if request.method == 'POST':
-        text = request.POST.get("text")
+        user_idea = request.POST.get("text", "").strip()
         
-        check_text= "give me only minimum 5-7 word to so that i can search on google patent to match my idea with any which is relevant remember your response should be those 5-7 word nothing else"
-
-        model = genai.GenerativeModel("models/gemini-2.5-flash")
-        chat = model.start_chat()
-        res = chat.send_message(text+check_text)
-        print(res.text)
-        data=scrape_patent_data(res.text)
-        print(data)
-        prompt="commpare both idea and tell if any thing is common in them i am giving you abstrat idea of both the project with intentiono of identifying if my idea is different and can be put to publish and patent tell your opinion if they are similar and what way before this prompt the idea which is ours is given and after this text all the idea which are on google patent is there  "
-        response = chat.send_message(text+prompt+data)
-        print(response.text)
-        return render(request, 'search_results.html', {'results': response.text})
-    elif request.method == 'GET':
-        return render(request, 'search_form.html')
-
-
-
-
-
-    #     response = requests.get(f'https://api.gemini.com/v1/search?q={query}&type=patent')
-    #     if response.status_code == 200:
-    #         return render(request, 'search/search_results.html', {'results': response.json()['results'][0]['title']})
-    #     else:
-    #         return render(request, 'search/search_results.html', {'error': 'Failed to retrieve results'})
-    # return render(request, 'search/search_form.html')
+        if not user_idea:
+            messages.error(request, 'Please enter your innovation idea.')
+            return render(request, 'search_form.html')
+        
+        try:
+            # Initialize AI service
+            ai_service = AIService()
+            
+            # Extract keywords
+            result = ai_service.process_patent_search(user_idea)
+            
+            if not result['success']:
+                messages.error(request, f"Error: {result.get('error', 'Unknown error occurred')}")
+                return render(request, 'search_form.html')
+            
+            keywords = result['keywords']
+            
+            # Scrape patent data using keywords
+            patent_data = scrape_patent_data(keywords)
+            
+            # Analyze similarity with patent data
+            final_result = ai_service.process_patent_search(user_idea, patent_data)
+            
+            if not final_result['success']:
+                messages.error(request, f"Error during analysis: {final_result.get('error', 'Unknown error')}")
+                return render(request, 'search_form.html')
+            
+            # Save to database
+            SearchHistory.objects.create(
+                user=request.user,
+                search_text=user_idea,
+                keywords_extracted=keywords,
+                patent_data=patent_data,
+                analysis_result=final_result['analysis']
+            )
+            
+            return render(request, 'search_results.html', {
+                'results': final_result['analysis'],
+                'keywords': keywords,
+                'user_idea': user_idea
+            })
+        
+        except Exception as e:
+            messages.error(request, f'An error occurred: {str(e)}')
+            return render(request, 'search_form.html')
+    
+    return render(request, 'search_form.html')

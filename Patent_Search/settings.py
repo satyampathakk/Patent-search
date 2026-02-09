@@ -1,7 +1,9 @@
-
-
 from pathlib import Path
 import os
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -11,12 +13,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-uyuu983kdqdwm=-fd&x3!x4y36v!r3m^&2@1d!ndsd(7+2&e5c'
+SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-uyuu983kdqdwm=-fd&x3!x4y36v!r3m^&2@1d!ndsd(7+2&e5c')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv('DEBUG', 'True').lower() in ['true', '1', 'yes']
 
-ALLOWED_HOSTS = ['*',"https://25ba-2409-40e3-68-d48d-dd95-207a-edff-912e.ngrok-free.app"]
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '*').split(',')
 
 
 # Application definition
@@ -115,5 +117,9 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Templates Directory
+TEMPLATE_DIR = os.path.join(BASE_DIR, "templates")
 
-TEMPLATE_DIR = os.path.join(BASE_DIR,"templates")
+# Authentication Configuration
+LOGIN_URL = os.getenv('LOGIN_URL', '/login/')
+LOGIN_REDIRECT_URL = os.getenv('LOGIN_REDIRECT_URL', '/dashboard/')
+LOGOUT_REDIRECT_URL = os.getenv('LOGOUT_REDIRECT_URL', '/login/')
