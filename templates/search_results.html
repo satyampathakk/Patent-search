@@ -250,7 +250,7 @@
 </head>
 <body>
     <nav class="navbar">
-        <h1>Patent Search System</h1>
+        <h1>PatentTrace</h1>
         <div class="navbar-links">
             <span>{{ user.username }}</span>
             <a href="{% url 'dashboard' %}">Dashboard</a>
@@ -286,7 +286,13 @@
             <div class="section">
                 <h3>Patent Analysis Results</h3>
                 <div class="section-content markdown-content" id="analysis-content">
-                    <!-- Markdown will be rendered here -->
+                    <!-- Fallback content (will be replaced by JavaScript) -->
+                    <div style="padding: 20px; background: #f8f9fa; border-radius: 5px;">
+                        <p style="color: #666; margin-bottom: 10px;">⏳ Rendering analysis...</p>
+                        <noscript>
+                            <div style="white-space: pre-wrap; color: #333;">{{ results }}</div>
+                        </noscript>
+                    </div>
                 </div>
             </div>
 
@@ -301,7 +307,14 @@
         // Render markdown content
         document.addEventListener('DOMContentLoaded', function() {
             const analysisContent = document.getElementById('analysis-content');
-            const markdownText = {{ results|safe|escapejs }};
+            const markdownText = `{{ results|escapejs }}`;
+            
+            console.log('Markdown text length:', markdownText.length);
+            
+            if (!markdownText || markdownText.trim() === '') {
+                analysisContent.innerHTML = '<p style="color: #999;">No analysis results available. Please try searching again.</p>';
+                return;
+            }
             
             // Configure marked options
             marked.setOptions({
@@ -311,8 +324,16 @@
                 mangle: false
             });
             
-            // Render markdown to HTML
-            analysisContent.innerHTML = marked.parse(markdownText);
+            try {
+                // Render markdown to HTML
+                const htmlContent = marked.parse(markdownText);
+                analysisContent.innerHTML = htmlContent;
+                console.log('Markdown rendered successfully');
+            } catch (error) {
+                console.error('Error rendering markdown:', error);
+                // Fallback: show as plain text
+                analysisContent.innerHTML = '<pre style="white-space: pre-wrap;">' + markdownText + '</pre>';
+            }
         });
     </script>
 </body>

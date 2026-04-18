@@ -2,6 +2,11 @@ import os
 from dotenv import load_dotenv
 from typing import Tuple, List
 
+# Suppress Google library warnings
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # Suppress TensorFlow warnings
+os.environ['GRPC_VERBOSITY'] = 'ERROR'     # Suppress gRPC warnings
+os.environ['GLOG_minloglevel'] = '2'       # Suppress Google logging
+
 # Load environment variables from .env file
 load_dotenv()
 

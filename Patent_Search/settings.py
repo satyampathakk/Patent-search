@@ -1,6 +1,13 @@
 from pathlib import Path
 import os
 from dotenv import load_dotenv
+import warnings
+
+# Suppress warnings
+warnings.filterwarnings('ignore')
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+os.environ['GRPC_VERBOSITY'] = 'ERROR'
+os.environ['GLOG_minloglevel'] = '2'
 
 # Load environment variables
 load_dotenv()

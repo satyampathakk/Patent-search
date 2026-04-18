@@ -2,9 +2,13 @@ from abc import ABC, abstractmethod
 from typing import Dict, Any
 import google.generativeai as genai
 import time
+import logging
 
 from .config_service import ConfigService
 from .prompt_service import PromptService
+
+# Configure logger
+logger = logging.getLogger(__name__)
 
 
 class AIAdapter(ABC):
@@ -33,26 +37,84 @@ class GeminiAdapter(AIAdapter):
         )
 
     def extract_keywords(self, user_idea: str) -> str:
+        logger.info("  🤖 Using Gemini API for keyword extraction")
         prompt = self.prompt_service.get_keyword_extraction_prompt(user_idea)
-        return self._call_with_retry(prompt)
+        logger.debug(f"  📝 Prompt length: {len(prompt)} chars")
+        result = self._call_with_retry(prompt)
+        logger.info(f"  ✅ Gemini returned: {result}")
+        return result
 
     def analyze_similarity(self, user_idea: str, patent_data: str) -> str:
+        logger.info("  🧠 Using Gemini API for similarity analysis")
         prompt = self.prompt_service.get_similarity_analysis_prompt(
             user_idea, patent_data
         )
-        return self._call_with_retry(prompt)
+        logger.debug(f"  📝 Prompt length: {len(prompt)} chars")
+        result = self._call_with_retry(prompt)
+        logger.info(f"  ✅ Analysis completed, response length: {len(result)} chars")
+        return result
 
     def _call_with_retry(self, prompt: str, max_retries: int = 3) -> str:
         for attempt in range(max_retries):
             try:
-                # ✅ CORRECT API USAGE
-                response = self.model.generate_content(prompt)
+                logger.info(f"  🔄 API call attempt {attempt + 1}/{max_retries}")
+                start_time = time.time()
+                
+                # ✅ CORRECT API USAGE with timeout
+                logger.debug(f"  📡 Sending request to Gemini API...")
+                response = self.model.generate_content(
+                    prompt,
+                    generation_config={
+                        'temperature': 0.7,
+                        'top_p': 0.95,
+                        'top_k': 40,
+                        'max_output_tokens': 1024,
+                    },
+                    request_options={'timeout': 60}  # Increased to 60 seconds
+                )
+                
+                elapsed = time.time() - start_time
+                logger.info(f"  ✅ API call successful in {elapsed:.2f}s")
+                
+                if not response or not response.text:
+                    raise ValueError("Empty response from Gemini API")
+                
                 return response.text.strip()
 
+            except TimeoutError as e:
+                elapsed = time.time() - start_time
+                logger.warning(f"  ⏱️  Timeout on attempt {attempt + 1} after {elapsed:.1f}s: {str(e)}")
+                if attempt < max_retries - 1:
+                    wait_time = 2 ** attempt
+                    logger.info(f"  ⏳ Waiting {wait_time}s before retry...")
+                    time.sleep(wait_time)
+                else:
+                    logger.error(f"  ❌ All {max_retries} attempts timed out")
+                    raise RuntimeError(f"Gemini API timed out after {max_retries} attempts")
+                
             except Exception as e:
-                if attempt == max_retries - 1:
+                elapsed = time.time() - start_time
+                error_msg = str(e)
+                
+                # Check for specific error types
+                if "504" in error_msg or "Deadline Exceeded" in error_msg:
+                    logger.warning(f"  ⏱️  API timeout (504) on attempt {attempt + 1} after {elapsed:.1f}s")
+                elif "429" in error_msg or "quota" in error_msg.lower():
+                    logger.warning(f"  🚫 Rate limit (429) on attempt {attempt + 1}")
+                elif "403" in error_msg or "permission" in error_msg.lower():
+                    logger.error(f"  🔒 Permission denied (403) - check API key")
+                    raise RuntimeError(f"Invalid API key or permissions: {error_msg}")
+                else:
+                    logger.warning(f"  ⚠️  Attempt {attempt + 1} failed after {elapsed:.1f}s: {error_msg}")
+                
+                if attempt < max_retries - 1:
+                    wait_time = 2 ** attempt
+                    logger.info(f"  ⏳ Waiting {wait_time}s before retry...")
+                    time.sleep(wait_time)
+                else:
+                    logger.error(f"  ❌ All {max_retries} attempts failed")
                     raise RuntimeError(
-                        f"Gemini API failed after {max_retries} attempts: {e}"
+                        f"Gemini API failed after {max_retries} attempts: {error_msg}"
                     )
                 time.sleep(2 ** attempt)
 
@@ -271,19 +333,24 @@ class AIService:
     
     def __init__(self):
         """Initialize with appropriate adapter based on config."""
+        logger.info("  ⚙️  Initializing AIService")
         self.config = ConfigService()
         self.prompt_service = PromptService()
         self.adapter = self._create_adapter()
+        logger.info("  ✅ AIService ready")
     
     def _create_adapter(self) -> AIAdapter:
         """Create appropriate adapter based on configuration."""
         model_type = self.config.get_model_type()
+        logger.info(f"  🔧 Creating {model_type} adapter")
         
         if model_type == 'gemini':
             api_key = self.config.get_gemini_api_key()
+            logger.info("  🤖 Using Gemini API")
             return GeminiAdapter(api_key, self.prompt_service)
         elif model_type == 'local':
             model_name = self.config.get_local_model_name()
+            logger.info(f"  💻 Using local model: {model_name}")
             return LocalModelAdapter(model_name, self.prompt_service)
         else:
             raise ValueError(f"Unsupported model type: {model_type}")
@@ -294,6 +361,11 @@ class AIService:
         If patent_data is provided, skip keyword extraction.
         """
         try:
+            if patent_data:
+                logger.info("  📊 Processing with patent data (analysis only)")
+            else:
+                logger.info("  🔍 Processing for keyword extraction")
+            
             # Extract keywords
             keywords = self.adapter.extract_keywords(user_idea)
             
@@ -311,6 +383,7 @@ class AIService:
             }
         
         except Exception as e:
+            logger.error(f"  ❌ Error in process_patent_search: {str(e)}")
             return {
                 'success': False,
                 'error': str(e),
