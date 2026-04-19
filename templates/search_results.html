@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Search Results - Patent Search</title>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -124,6 +126,17 @@
         }
         .btn-secondary:hover {
             background: #5a6268;
+        }
+        .btn-download {
+            background: #28a745;
+            color: white;
+        }
+        .btn-download:hover {
+            background: #218838;
+        }
+        .btn-download:disabled {
+            background: #ccc;
+            cursor: not-allowed;
         }
         .success-badge {
             display: inline-block;
@@ -297,6 +310,9 @@
             </div>
 
             <div class="actions">
+                <button onclick="downloadPDF()" class="btn btn-download" id="downloadBtn">
+                    📄 Download PDF Report
+                </button>
                 <a href="{% url 'dashboard' %}" class="btn btn-primary">View Dashboard</a>
                 <a href="{% url 'search_patents' %}" class="btn btn-secondary">New Search</a>
             </div>
@@ -335,6 +351,119 @@
                 analysisContent.innerHTML = '<pre style="white-space: pre-wrap;">' + markdownText + '</pre>';
             }
         });
+        
+        // PDF Download Function
+        async function downloadPDF() {
+            const downloadBtn = document.getElementById('downloadBtn');
+            downloadBtn.disabled = true;
+            downloadBtn.textContent = '⏳ Generating PDF...';
+            
+            try {
+                // Get the jsPDF instance
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF('p', 'mm', 'a4');
+                
+                const pageWidth = doc.internal.pageSize.getWidth();
+                const pageHeight = doc.internal.pageSize.getHeight();
+                
+                // Create a printable version of the content
+                const printContent = document.createElement('div');
+                printContent.style.width = '210mm'; // A4 width
+                printContent.style.padding = '15mm';
+                printContent.style.backgroundColor = 'white';
+                printContent.style.fontFamily = 'Arial, sans-serif';
+                
+                printContent.innerHTML = `
+                    <div style="border-left: 4px solid #667eea; padding-left: 15px; margin-bottom: 20px; background: #f8f9fa; padding: 15px;">
+                        <p style="margin: 0; color: #666; font-size: 12px;">
+                            <strong>Date:</strong> ${new Date().toLocaleString()} &nbsp;&nbsp;
+                            <strong>User:</strong> {{ user.username }}
+                        </p>
+                    </div>
+                    
+                    <div style="margin-bottom: 25px;">
+                        <h2 style="color: #333; font-size: 18px; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 2px solid #667eea;">
+                            Your Innovation Idea
+                        </h2>
+                        <p style="color: #555; font-size: 13px; line-height: 1.6;">
+                            {{ user_idea|escapejs }}
+                        </p>
+                    </div>
+                    
+                    <div style="margin-bottom: 25px;">
+                        <h2 style="color: #333; font-size: 18px; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 2px solid #667eea;">
+                            Extracted Keywords
+                        </h2>
+                        <div style="border-left: 4px solid #667eea; padding-left: 15px; background: #f8f9fa; padding: 15px;">
+                            <p style="margin: 0; color: #667eea; font-weight: 500; font-size: 13px;">
+                                <strong>Search Terms:</strong> {{ keywords|escapejs }}
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-bottom: 25px;">
+                        <h2 style="color: #333; font-size: 18px; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 2px solid #667eea;">
+                            Patent Analysis
+                        </h2>
+                        <div style="color: #555; font-size: 12px; line-height: 1.6;">
+                            ${document.getElementById('analysis-content').innerHTML}
+                        </div>
+                    </div>
+                `;
+                
+                // Temporarily add to body for rendering
+                printContent.style.position = 'absolute';
+                printContent.style.left = '-9999px';
+                document.body.appendChild(printContent);
+                
+                // Capture as canvas
+                const canvas = await html2canvas(printContent, {
+                    scale: 2,
+                    useCORS: true,
+                    logging: false,
+                    backgroundColor: '#ffffff'
+                });
+                
+                // Remove temporary element
+                document.body.removeChild(printContent);
+                
+                // Calculate dimensions
+                const imgWidth = pageWidth - 20; // margins
+                const imgHeight = (canvas.height * imgWidth) / canvas.width;
+                let heightLeft = imgHeight;
+                let position = 10;
+                
+                // Add image to PDF
+                const imgData = canvas.toDataURL('image/png');
+                doc.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
+                heightLeft -= (pageHeight - 20);
+                
+                // Add new pages if content is longer
+                while (heightLeft > 0) {
+                    position = heightLeft - imgHeight + 10;
+                    doc.addPage();
+                    doc.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
+                    heightLeft -= (pageHeight - 20);
+                }
+                
+                // Save PDF
+                doc.save('PatentTrace_Report_' + new Date().getTime() + '.pdf');
+                
+                downloadBtn.disabled = false;
+                downloadBtn.textContent = '✅ PDF Downloaded!';
+                setTimeout(() => {
+                    downloadBtn.textContent = '📄 Download PDF Report';
+                }, 3000);
+                
+            } catch (error) {
+                console.error('PDF generation error:', error);
+                downloadBtn.disabled = false;
+                downloadBtn.textContent = '❌ Download Failed';
+                setTimeout(() => {
+                    downloadBtn.textContent = '📄 Download PDF Report';
+                }, 3000);
+            }
+        }
     </script>
 </body>
 </html>
